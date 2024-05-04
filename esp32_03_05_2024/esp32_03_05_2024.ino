@@ -14,6 +14,8 @@
 #include <WiFiClient.h>
 #include <WiFiServer.h>
 
+#include <HTTPClient.h>
+
 #define DHTPIN 13
 
 #define SDAPIN 21
