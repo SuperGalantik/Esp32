@@ -182,5 +182,35 @@ def get_one(id):
         return "200 OK"
 
 
+@app.route("/get_actuals", methods=['GET'])
+def get_actuals():
+    esp32_url = 'http://10.0.2.5/get_actuals'
+    response = requests.get(esp32_url)
+    print("response code: " + str(response.status_code) + "\tresponse: " + response.text)
+    if response.status_code == 200:
+        datas = jsonify(response.text)
+
+        temperaturec = datas["temperature"].split(";")
+        humidityc = datas["humidity"].split(";")
+        heat_indexc = datas["heat_index"].split(";")
+        lightc = datas["light"].split(";")
+
+        for i in range(3):
+            temperaturec[i] = float(temperaturec[i])
+            humidityc[i] = float(humidityc[i])
+            heat_indexc[i] = float(heat_indexc[i])
+            lightc[i] = float(lightc[i])
+
+        datas["temperature"] = temperaturec
+        datas["humidity"] = humidityc
+        datas["heat_index"] = heat_indexc
+        datas["light"] = lightc
+
+        if datas is not None:
+            return jsonify(datas), 200
+        else:
+            return "Impossible to retrieve actual datas", 400
+
+
 if __name__ == '__main__':
     Flask.run(app, host="0.0.0.0", port=10000, debug=True)
