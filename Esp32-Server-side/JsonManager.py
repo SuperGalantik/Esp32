@@ -32,10 +32,10 @@ class JsonManager(object):
         self.data["date_time"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
         for i in range(3):
-            self.data["temperature"].append(data["temperature"][i])
-            self.data["humidity"].append(data["humidity"][i])
-            self.data["heat_index"].append(data["heat_index"][i])
-            self.data["light"].append(data["light"][i])
+            self.data["temperature"].insert(i, data["temperature"][i])
+            self.data["humidity"].insert(i, data["humidity"][i])
+            self.data["heat_index"].insert(i, data["heat_index"][i])
+            self.data["light"].insert(i, data["light"][i])
 
         return self.data
 
