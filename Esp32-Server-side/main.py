@@ -1,14 +1,19 @@
-'''
+"""
     @Author: Gianluca Galanti
-    @Version: 07/05/2024
-'''
+    @Version: 7/05/2024
+"""
 
+import requests
 from flask import *
 import pymysql
+from datetime import datetime
+import time
+from flask_cors import CORS
 
 import JsonManager
 
 app = Flask(__name__)
+cors = CORS(app)
 
 jsonManager = JsonManager.JsonManager()
 
@@ -36,6 +41,11 @@ class Data(db.Model, UserMixin):
 with app.app_context():
     db.create_all()
 '''
+
+start: [float] = time.time()
+count: [int] = 0
+actual_datas: [dict]
+
 
 def db_connection():
     in_conn = pymysql.connect(
@@ -84,7 +94,7 @@ def postListener():
 
         print(Data.query.all())"""
 
-    return "ok"
+    return "HTTP/1.1 OK", 200
 
 
 # GET method
@@ -179,35 +189,28 @@ def get_one(id):
         cursor.close()
         conn.close()
 
-        return "200 OK"
+        return "HTTP/1.1 OK", 200
 
 
 @app.route("/get_actuals", methods=['GET'])
 def get_actuals():
-    esp32_url = 'http://10.0.2.5/get_actuals'
-    response = requests.get(esp32_url)
-    print("response code: " + str(response.status_code) + "\tresponse: " + response.text)
-    if response.status_code == 200:
-        datas = jsonify(response.text)
+    global actual_datas
+    global start
+    global count
 
-        temperaturec = datas["temperature"].split(";")
-        humidityc = datas["humidity"].split(";")
-        heat_indexc = datas["heat_index"].split(";")
-        lightc = datas["light"].split(";")
+    if request.method == "GET":
+        esp32_url = 'http://192.168.1.9/get_actuals'
 
-        for i in range(3):
-            temperaturec[i] = float(temperaturec[i])
-            humidityc[i] = float(humidityc[i])
-            heat_indexc[i] = float(heat_indexc[i])
-            lightc[i] = float(lightc[i])
+        if count == 0 or (time.time() - start) > 600.0:
+            start = time.time()
+            count += 1
+            response = requests.get(esp32_url)
+            if response.status_code == 200:
+                actual_datas = response.json()
+                actual_datas["date_time"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-        datas["temperature"] = temperaturec
-        datas["humidity"] = humidityc
-        datas["heat_index"] = heat_indexc
-        datas["light"] = lightc
-
-        if datas is not None:
-            return jsonify(datas), 200
+        if actual_datas is not None:
+            return actual_datas, 200, {"Content-Type": "application/json"}
         else:
             return "Impossible to retrieve actual datas", 400
 
