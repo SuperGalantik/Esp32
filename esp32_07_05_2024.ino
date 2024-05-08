@@ -39,8 +39,8 @@ WiFiClient wifi;
 
 WiFiClient getClient;
 
-IPAddress local_ip(10,0,2,5);
-IPAddress gateway(10,0,2,1);
+IPAddress local_ip(10,0,24,5);
+IPAddress gateway(10,0,24,1);
 IPAddress snm(255,255,255,0);
 
 String server_address = "10.25.0.15";
@@ -51,7 +51,11 @@ HttpClient client = HttpClient(wifi, server_address, port);
 AsyncWebServer webServer(80);
 void notFound(AsyncWebServerRequest *request) { request->send(404, "text/plain", "Not found"); }
 
-TaskHandle_t server_loop_task;
+TaskHandle_t humAndTempTask;
+TaskHandle_t lightTask;
+
+TaskHandle_t webServerHumAndTempTask;
+TaskHandle_t webServerLightTask;
 
 unsigned long currentTime = millis();
 unsigned long previousTime = 0; 
@@ -83,9 +87,7 @@ void setup()
 
   webServerSetup();
 
-  pinMode(LASERPIN, OUTPUT);
-
-  //xTaskCreatePinnedToCore(server_loop, "server_loop", 4000, NULL, 2, &server_loop_task, 0);
+  //pinMode(LASERPIN, OUTPUT);
 }
 
 /* ---------------------------- main loop ---------------------------------*/
@@ -93,11 +95,13 @@ void setup()
 void loop() 
 {
   Serial.println("Reading levels in main loop");
+
   readHumAndTemp();
   readLightLevel();
+
   parse_json_data();
   post_data();
-  delay(30*1000);
+  delay(10*60*1000);
 }
 
 /* ---------------------------- Server loop ---------------------------------*/
@@ -106,11 +110,17 @@ void webServerSetup()
 {
   webServer.on("/get_actuals", HTTP_GET, [](AsyncWebServerRequest *request) 
   {
+    readHumAndTemp();
+    readLightLevel();
+
     String payload = dataToSend;
+
     request->send(200, "application/json", payload); 
   });
   webServer.begin();
 }
+
+/*----------------------------- Read levels -----------------------*/
 
 /*
 void server_loop(void* pvParameters)
