@@ -13,7 +13,7 @@ from flask_cors import CORS
 import JsonManager
 
 app = Flask(__name__)
-cors = CORS(app)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 jsonManager = JsonManager.JsonManager()
 
@@ -86,6 +86,7 @@ def postListener():
         conn.commit()
         cursor.close()
         conn.close()
+
         """new_data = Data(device_id=data["device_id"], date_time=data["date_time"], temperature=temperature,
                         humidity=humidity, heat_index=heat_index, light=light)
 
@@ -213,6 +214,16 @@ def get_actuals():
             return actual_datas, 200, {"Content-Type": "application/json"}
         else:
             return "Impossible to retrieve actual datas", 400
+
+
+@app.route("/get_interval", methods=["GET"])
+def get_interval(start_date, end_date):
+    if request.method == "GET":
+        start_date = request.args.get["start_date"]
+        end_date = request.args.get["end_date"]
+
+        if start_date is None or end_date is None:
+            return "Date passed are not valid", 500
 
 
 if __name__ == '__main__':
