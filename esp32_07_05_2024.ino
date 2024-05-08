@@ -26,8 +26,8 @@
 
 #define LASERPIN 15
 
-char *ssid = "dlink";
-char *password = ""; 
+char *ssid = "EoloRouterEvo";
+char *password = "Pr?43!8ve"; 
 
 IPAddress ip;
 
@@ -39,11 +39,11 @@ WiFiClient wifi;
 
 WiFiClient getClient;
 
-IPAddress local_ip(10,0,24,5);
-IPAddress gateway(10,0,24,1);
+IPAddress local_ip(192,168,1,9);
+IPAddress gateway(192,168,1,1);
 IPAddress snm(255,255,255,0);
 
-String server_address = "10.25.0.15";
+String server_address = "192.168.1.3";
 int port = 10000;
 
 HttpClient client = HttpClient(wifi, server_address, port);
@@ -101,7 +101,7 @@ void loop()
 
   parse_json_data();
   post_data();
-  delay(10*60*1000);
+  delay(30*60*1000);
 }
 
 /* ---------------------------- Server loop ---------------------------------*/
@@ -197,7 +197,7 @@ void wifiConfig()
 {
   WiFi.config(local_ip, gateway, snm);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid);
+  WiFi.begin(ssid, password);
   
   while(WiFi.status()!= WL_CONNECTED)
   {
@@ -229,7 +229,8 @@ void post_data()
   String response = client.responseBody();
 
   Serial.print("HTTP POST response code: ");
-  Serial.println(httpResponseCode);
+  Serial.print(httpResponseCode);
+  Serial.println(response);
 
   //do
   //{
@@ -243,11 +244,11 @@ void readHumAndTemp()
   int i;
   for(i=0; i<3; i++)
   {
-    temp[i] = roundf(dhtSensor.readTemperature()*100.00)/100.00;
+    temp[i] = round(dhtSensor.readTemperature()*100.00)/100.00;
     delay(500);
-    hum[i] = roundf(dhtSensor.readHumidity()*100.00)/100.00;
+    hum[i] = round(dhtSensor.readHumidity()*100.00)/100.00;
     delay(500);
-    heat[i] = roundf(dhtSensor.computeHeatIndex()*100.00)/100.00;
+    heat[i] = round(dhtSensor.computeHeatIndex()*100.00)/100.00;
     if(i!=2)
       delay(500);
   }
@@ -259,5 +260,5 @@ void readLightLevel()
 {
   int i;
   for(i=0; i<3; i++)
-    light[i] = roundf(bhSensor.readLightLevel()*100.00)/100.00;
+    light[i] = round(bhSensor.readLightLevel()*100.00)/100.00;
 }
