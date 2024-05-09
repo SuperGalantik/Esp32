@@ -29,7 +29,7 @@ class JsonManager(object):
 
     def dump_data(self, data):
         self.data["device_id"] = data["device_id"]
-        self.data["date_time"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        self.data["date_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         for i in range(3):
             self.data["temperature"].insert(i, data["temperature"][i])
