@@ -1,6 +1,7 @@
+
 /**
   Author: Gianluca Galanti 4C-IN
-  Version: 07/05/2024
+  Version: 09/05/2024
 */
 
 #include <ESPAsyncWebServer.h>
@@ -9,6 +10,7 @@
 
 #include <ArduinoJson.h>
 #include <ArduinoHttpClient.h>
+//#include <WiFi101.h>
 
 #include <Wire.h>
 #include <BH1750.h>
@@ -95,13 +97,11 @@ void setup()
 void loop() 
 {
   Serial.println("Reading levels in main loop");
-
   readHumAndTemp();
   readLightLevel();
-
   parse_json_data();
   post_data();
-  delay(30*60*1000);
+  delay(15*60*1000);
 }
 
 /* ---------------------------- Server loop ---------------------------------*/
@@ -213,28 +213,21 @@ void wifiConfig()
 void post_data()
 {
   int httpResponseCode;
-  
-  //Serial.println(dataToSend);
 
   String contentType = "application/json";
   String payload = dataToSend;
 
   Serial.println(payload);
-  //Serial.print("Tipo di payload: ");
-  //Serial.println(typeof(payload));
-
-  client.post("/postListener", contentType, payload);
-
-  httpResponseCode = client.responseStatusCode();
-  String response = client.responseBody();
-
+  
+  do
+  {
+    client.post("/postListener", contentType, payload);
+    httpResponseCode = client.responseStatusCode();
+    String response = client.responseBody();
+  } while(httpResponseCode!=200);
+  
   Serial.print("HTTP POST response code: ");
-  Serial.print(httpResponseCode);
-  Serial.println(response);
-
-  //do
-  //{
-  //} while(httpResponseCode!=200); to implement later
+  Serial.println(httpResponseCode);
 }
 
 /* ---------------------------- read humidity, temperature and heat index ---------------------------------*/
