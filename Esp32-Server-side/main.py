@@ -113,22 +113,7 @@ def getData():
             for row in cursor.fetchall()
         ]
 
-        for j in range(len(datas)):
-            temperaturec = datas[j]["temperature"].split(";")
-            humidityc = datas[j]["humidity"].split(";")
-            heat_indexc = datas[j]["heat_index"].split(";")
-            lightc = datas[j]["light"].split(";")
-
-            for i in range(3):
-                temperaturec[i] = float(temperaturec[i])
-                humidityc[i] = float(humidityc[i])
-                heat_indexc[i] = float(heat_indexc[i])
-                lightc[i] = float(lightc[i])
-
-            datas[j]["temperature"] = temperaturec
-            datas[j]["humidity"] = humidityc
-            datas[j]["heat_index"] = heat_indexc
-            datas[j]["light"] = lightc
+        datas = dump_datas(datas, 'multi')
 
         cursor.close()
         conn.close()
@@ -152,25 +137,9 @@ def get_one(id):
         rows = cursor.fetchall()
 
         for r in rows:
-            print(r)
             datas = r
-        print(datas)
 
-        temperaturec = datas["temperature"].split(";")
-        humidityc = datas["humidity"].split(";")
-        heat_indexc = datas["heat_index"].split(";")
-        lightc = datas["light"].split(";")
-
-        for i in range(3):
-            temperaturec[i] = float(temperaturec[i])
-            humidityc[i] = float(humidityc[i])
-            heat_indexc[i] = float(heat_indexc[i])
-            lightc[i] = float(lightc[i])
-
-        datas["temperature"] = temperaturec
-        datas["humidity"] = humidityc
-        datas["heat_index"] = heat_indexc
-        datas["light"] = lightc
+        datas = dump_datas(datas, 'single')
 
         cursor.close()
         conn.close()
@@ -208,7 +177,7 @@ def get_actuals():
             response = requests.get(esp32_url)
             if response.status_code == 200:
                 actual_datas = response.json()
-                actual_datas["date_time"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                actual_datas["date_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         if actual_datas is not None:
             return actual_datas, 200, {"Content-Type": "application/json"}
@@ -217,14 +186,74 @@ def get_actuals():
 
 
 @app.route("/get_interval", methods=["GET"])
-def get_interval(start_date, end_date):
+def get_interval():
     if request.method == "GET":
-        start_date = request.args.get["start_date"]
-        end_date = request.args.get["end_date"]
+        # start_date = request.args.get["start_date"]
+        # end_date = request.args.get["end_date"]
+        print(request.args.to_dict())
+        start_date = request.args.to_dict()["start_date"]
+        end_date = request.args.to_dict()["end_date"]
+
+        conn = db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM data WHERE DATE(date_time) BETWEEN %s AND %s", (start_date, end_date))
+        datas = [
+            dict(id=row["id"], device_id=row["device_id"], date_time=row["date_time"], temperature=row["temperature"],
+                 humidity=row["humidity"], heat_index=row["heat_index"], light=row["light"])
+            for row in cursor.fetchall()
+        ]
+
+        datas = dump_datas(datas, 'multi')
+
+        cursor.close()
+        conn.close()
 
         if start_date is None or end_date is None:
             return "Date passed are not valid", 500
+        else:
+            return jsonify(datas)
 
+def dump_datas(datas, method):
+
+    if method == 'multi':
+        for j in range(len(datas)):
+            temperaturec = datas[j]["temperature"].split(";")
+            humidityc = datas[j]["humidity"].split(";")
+            heat_indexc = datas[j]["heat_index"].split(";")
+            lightc = datas[j]["light"].split(";")
+
+            for i in range(3):
+                temperaturec[i] = float(temperaturec[i])
+                humidityc[i] = float(humidityc[i])
+                heat_indexc[i] = float(heat_indexc[i])
+                lightc[i] = float(lightc[i])
+
+            datas[j]["temperature"] = temperaturec
+            datas[j]["humidity"] = humidityc
+            datas[j]["heat_index"] = heat_indexc
+            datas[j]["light"] = lightc
+
+    else:
+        temperaturec = datas["temperature"].split(";")
+        humidityc = datas["humidity"].split(";")
+        heat_indexc = datas["heat_index"].split(";")
+        lightc = datas["light"].split(";")
+
+        for i in range(3):
+            temperaturec[i] = float(temperaturec[i])
+            humidityc[i] = float(humidityc[i])
+            heat_indexc[i] = float(heat_indexc[i])
+            lightc[i] = float(lightc[i])
+
+        datas["temperature"] = temperaturec
+        datas["humidity"] = humidityc
+        datas["heat_index"] = heat_indexc
+        datas["light"] = lightc
+
+    return datas
 
 if __name__ == '__main__':
     Flask.run(app, host="0.0.0.0", port=10000, debug=True)
+
+
