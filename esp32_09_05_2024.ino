@@ -28,8 +28,8 @@
 
 #define LASERPIN 15
 
-char *ssid = "EoloRouterEvo";
-char *password = "Pr?43!8ve"; 
+char *ssid = "dlink";
+char *password = ""; 
 
 IPAddress ip;
 
@@ -41,11 +41,11 @@ WiFiClient wifi;
 
 WiFiClient getClient;
 
-IPAddress local_ip(192,168,1,9);
-IPAddress gateway(192,168,1,1);
+IPAddress local_ip(10,0,3,5);
+IPAddress gateway(10,0,3,1);
 IPAddress snm(255,255,255,0);
 
-String server_address = "192.168.1.3";
+String server_address = "10.25.0.15";
 int port = 10000;
 
 HttpClient client = HttpClient(wifi, server_address, port);
@@ -101,7 +101,7 @@ void loop()
   readLightLevel();
   parse_json_data();
   post_data();
-  delay(15*60*1000);
+  delay(15000);
 }
 
 /* ---------------------------- Server loop ---------------------------------*/
@@ -112,7 +112,7 @@ void webServerSetup()
   {
     readHumAndTemp();
     readLightLevel();
-
+    parse_json_data();
     String payload = dataToSend;
 
     request->send(200, "application/json", payload); 
@@ -197,7 +197,7 @@ void wifiConfig()
 {
   WiFi.config(local_ip, gateway, snm);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid);
   
   while(WiFi.status()!= WL_CONNECTED)
   {
