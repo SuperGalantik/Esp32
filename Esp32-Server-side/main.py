@@ -49,10 +49,10 @@ actual_datas: [dict]
 
 def db_connection():
     in_conn = pymysql.connect(
-        host="sql11.freesqldatabase.com",
-        database="sql11703848",
-        user="sql11703848",
-        password="Q6t1y9zbE5",
+        host="10.25.0.14",
+        database="4cgalanti__",
+        user="4cgalanti",
+        password="4cgalanti",
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor
     )
